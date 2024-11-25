@@ -31,6 +31,7 @@ function App() {
         <Route path="/" element={isLoggedIn ? <Navigate to='/dashboard' /> : <Navigate to='/setup' />} />
         <Route path="/setup" element={isLoggedIn ? <Navigate to='/dashboard' /> : <Form />} />
         <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to='/setup' />} />
+        <Route path="*" element={isLoggedIn ? <Dashboard /> : <Navigate to='/setup' />} />
       </Routes>
 
     </div>
