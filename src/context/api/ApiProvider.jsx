@@ -11,26 +11,28 @@ import useFetchUsers from './fetchUsers';
 import useFetchRecipient from './fetchRecipient';
 import { useSocket } from '../socket/socket';
 import useFetchConversation from './fetchConversation';
+import useLogoutUser from './logoutUser';
 
 export const apiContext = createContext();
 
 export function ApiProvider({ children }) {
-  const socket = useSocket();
   const navigate = useNavigate();
+  const socket = useSocket();
   const { registerUser, regLoading } = useRegisterUser();
   const { LoginUser, loginLoading } = useLoginUser();
   const { authenticateUser, authLoading } = useAuthenticate();
   const { users, fetchLoading, fetchUsers } = useFetchUsers();
+  const { logoutUser } = useLogoutUser();
   const { fetchRecipient } = useFetchRecipient();
   const { fetchConversation } = useFetchConversation();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleRegisterUser = async (username, email, phone, password) => {
+  const handleRegisterUser = async (username, email, phone, password, avatar) => {
     if (username === "" || email === "" || password === "" || phone === "") {
       toast.error("All fields are required");
     } else {
-      const status = await registerUser(username, email, phone, password);
+      const status = await registerUser(username, email, phone, password, avatar);
       if (status !== 201) {
         toast.dismiss();
         toast.error("Something went wrong");
@@ -73,10 +75,14 @@ export function ApiProvider({ children }) {
   };
 
   const handleFetchUsers = async () => {
-    const status = await fetchUsers();
+    const { status, users } = await fetchUsers();
     if (status !== 200) {
       toast.dismiss();
       toast.error("Something went wrong");
+    }
+    else {
+      return users
+
     }
   };
 
@@ -87,10 +93,21 @@ export function ApiProvider({ children }) {
 
   const handleFetchConversation = async () => {
     const { conversation } = await fetchConversation();
-    
+
     return conversation;
-    
+
   };
+
+  const handleLogoutUser = async () => {
+    const { status } = await logoutUser();
+    if (status !== 200) {
+      return { status };
+    } else {
+      setIsLoggedIn(false);
+      navigate('/setup')
+      return { status };
+    }
+  }
 
   return (
     <apiContext.Provider
@@ -107,6 +124,7 @@ export function ApiProvider({ children }) {
         handleFetchUsers,
         handleFetchRecipient,
         handleFetchConversation,
+        handleLogoutUser
       }}
     >
       {children}

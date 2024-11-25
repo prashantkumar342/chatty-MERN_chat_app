@@ -2,10 +2,14 @@ import { useContext } from 'react';
 import { Avatar, Button, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
 import { GlobalVar } from "../../context/global/GlobalVariable";
 import { Chat, Home, Logout, People, Search, Settings } from "@mui/icons-material";
+import { apiContext } from '../../context/api/ApiProvider';
 
 function NavDrawer() {
-  const { isDrawer, setIsDrawer } = useContext(GlobalVar);
-
+  const { isDrawer, setIsDrawer, profile, setIsPeoples } = useContext(GlobalVar);
+  const { handleLogoutUser } = useContext(apiContext)
+  const logout = () => {
+    handleLogoutUser();
+  }
   return (
     <Drawer
       open={isDrawer}
@@ -25,7 +29,7 @@ function NavDrawer() {
       }}
     >
       <div className='w-full justify-center flex'>
-        <Avatar sx={{ width: "70px", height: "70px" }} />
+        <Avatar sx={{ width: "70px", height: "70px" }} src={profile.avatar} />
       </div>
       <Divider />
       <div className='w-full flex justify-center h-full items-center'>
@@ -40,12 +44,14 @@ function NavDrawer() {
             <ListItemText primary="Chats" sx={{ color: "white" }} />
           </ListItem>
           <Divider sx={{ backgroundColor: "white" }} />
-          <ListItem button sx={{ cursor: "pointer", color: "white" }}>
-            <ListItemIcon sx={{ color: "white" }}><People /></ListItemIcon>
+          <ListItem button sx={{ cursor: "pointer", color: "white" }} >
+            <ListItemIcon sx={{ color: "white" }} ><People /></ListItemIcon>
             <ListItemText primary="Friends" sx={{ color: "white" }} />
           </ListItem>
           <Divider sx={{ backgroundColor: "white" }} />
-          <ListItem button sx={{ cursor: "pointer", color: "white" }}>
+          <ListItem button sx={{ cursor: "pointer", color: "white" }}
+            onClick={() => { setIsPeoples(true); setIsDrawer(false)}}
+          >
             <ListItemIcon sx={{ color: "white" }}><Search /></ListItemIcon>
             <ListItemText primary="Search" sx={{ color: "white" }} />
           </ListItem>
@@ -57,7 +63,9 @@ function NavDrawer() {
         </List>
       </div>
       <div className='w-full flex justify-center mt-auto'>
-        <Button startIcon={<Logout />} sx={{ textTransform: "none", color: "white", fontSize: "15px" }}>Logout</Button>
+        <Button startIcon={<Logout />} sx={{ textTransform: "none", color: "white", fontSize: "15px" }}
+          onClick={logout}
+        >Logout</Button>
       </div>
     </Drawer>
   );

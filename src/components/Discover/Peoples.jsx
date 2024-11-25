@@ -1,13 +1,14 @@
 import { useContext, useState, useEffect } from 'react';
-import { List, ListItem, ListItemAvatar, ListItemText, Avatar, TextField, Divider, Button } from "@mui/material";
+import { List, ListItem, ListItemAvatar, ListItemText, Avatar, TextField, Divider, Button, IconButton } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close'; // Import CloseIcon
 import { apiContext } from "../../context/api/ApiProvider";
 import { GlobalVar } from '../../context/global/GlobalVariable';
 import { useSocket } from '../../context/socket/socket';
 
 function Peoples() {
   const socket = useSocket();
-  const { users, handleFetchRecipient } = useContext(apiContext);
-  const { setIsChatBox, setIsPeoples, setChatBoxData, chatBoxData } = useContext(GlobalVar)
+  const { handleFetchRecipient } = useContext(apiContext);
+  const { setIsChatBox, setIsPeoples, setChatBoxData, chatBoxData, users } = useContext(GlobalVar);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
 
@@ -26,26 +27,31 @@ function Peoples() {
     setIsChatBox(true);
     setIsPeoples(false);
     const recipient = await handleFetchRecipient(id);
-    setChatBoxData({ username: recipient.username, status: recipient.status, id: recipient._id })
+    setChatBoxData({ username: recipient.username, status: recipient.status, id: recipient._id });
   };
+
   useEffect(() => {
     if (socket) {
       socket.on("onStatus", data => {
         if (chatBoxData.username === data.user) {
-          setChatBoxData({ username: data.user, status: data.onlineStatus })
+          setChatBoxData({ username: data.user, status: data.onlineStatus });
         }
-
-      })
+      });
     }
     return () => {
-      socket.off("onStatus")
-    }
-  }, [socket, setChatBoxData])
+      socket.off("onStatus");
+    };
+  }, [socket, setChatBoxData, chatBoxData.username]);
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setFilteredUsers([]);
+  };
 
   return (
     <div className="flex flex-col h-full">
       {/* Search Bar */}
-      <div className="p-2 bg-gray-100">
+      <div className="p-2 bg-gray-100 flex items-center">
         <TextField
           variant="outlined"
           placeholder="Search people..."
@@ -55,13 +61,19 @@ function Peoples() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        <IconButton button onClick={clearSearch} sx={{ ml: 1.5, backgroundColor: "white" }}
+          onClickCapture={() => setIsPeoples(false)}
+        >
+          <CloseIcon sx={{ color: '#6E00FF', fontWeight: 500 }} />
+        </IconButton>
       </div>
       <Divider />
       {filteredUsers.length > 0 && (
         <div className="flex-grow overflow-auto">
           <List>
             {filteredUsers.map((user, index) => (
-              <div key={index}>
+              < div key={user._id} >
+                {console.log(user)}
                 <ListItem
                   component={Button}
                   sx={{ textTransform: "none", color: 'black' }}
@@ -79,9 +91,10 @@ function Peoples() {
               </div>
             ))}
           </List>
-        </div>
-      )}
-    </div>
+        </div >
+      )
+      }
+    </div >
   );
 }
 

@@ -10,10 +10,10 @@ function Discover() {
       <div className="
       outline fixed backdrop-blur-md flex 
       justify-center w-screen h-screen"
-      onClick={()=>setIsPeoples(false)}
+        onClick={() => setIsPeoples(false)}
       >
-        <div className="outline outline-1 bg-white w-[300px]"
-        onClick={(e)=>e.stopPropagation()}
+        <div className=" bg-white w-[300px]"
+          onClick={(e) => e.stopPropagation()}
         >
           <Peoples />
         </div>

@@ -4,13 +4,17 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import LockIcon from '@mui/icons-material/Lock';
-import { Button, Divider, Typography } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Button, Divider, Typography, IconButton } from '@mui/material';
 import { useContext, useState } from 'react';
 import { apiContext } from '../../context/api/ApiProvider';
+import toast from 'react-hot-toast';
 
 const RegisterForm = () => {
-  const { handleRegisterUser } = useContext(apiContext)
-  const [userCreds, setUserCreds] = useState({ username: "", email: "", password: "", phone: "" })
+  const { handleRegisterUser } = useContext(apiContext);
+  const [userCreds, setUserCreds] = useState({ username: "", email: "", password: "", phone: "", avatar: null });
+  const [error, setError] = useState(null);
 
   const getFieldValues = (event) => {
     setUserCreds({
@@ -18,16 +22,36 @@ const RegisterForm = () => {
       [event.target.name]: event.target.value.trim(),
     });
   }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.size > 500 * 1024) {
+      toast.error("Image size should be less than 500KB");
+      return;
+    }
+    if (file && !file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+    setError(null);
+    setUserCreds({
+      ...userCreds,
+      avatar: file
+    });
+  };
+
+  const removeImage = () => {
+    setUserCreds({ ...userCreds, avatar: null });
+  }
+
   const register = (e) => {
-    e.preventDefault()
-    handleRegisterUser(userCreds.username, userCreds.email, userCreds.phone, userCreds.password)
-    setUserCreds({ username: "", email: "", password: "", phone: "" });
+    e.preventDefault();
+    handleRegisterUser(userCreds.username, userCreds.email, userCreds.phone, userCreds.password, userCreds.avatar);
+    setUserCreds({ username: "", email: "", password: "", phone: "", avatar: null });
   }
 
   return (
-    <div className='
-     p-[10px]
-    '>
+    <div className='p-[10px]'>
       <Typography variant='h5'>
         Welcome 👋🏼
       </Typography>
@@ -115,8 +139,31 @@ const RegisterForm = () => {
             },
           }}
         />
-        <Button variant="contained" color="primary" fullWidth sx={{ mt: 2, backgroundColor: 'green' }} disableElevation type='submit'
-        >
+        <div className="flex items-center">
+          <Button
+            variant="contained"
+            component="label"
+            sx={{ mt: 2, backgroundColor: 'blue', flexGrow: 1 }}
+          >
+            Upload Avatar
+            <input
+              type="file"
+              hidden
+              accept="image/*" // Accept only image files
+              onChange={handleImageChange}
+            />
+          </Button>
+          {userCreds.avatar && (
+            <>
+              <CheckCircleIcon color="success" sx={{ ml: 2 }} />
+              <IconButton onClick={removeImage}>
+                <DeleteIcon color="error" />
+              </IconButton>
+            </>
+          )}
+        </div>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <Button variant="contained" color="primary" fullWidth sx={{ mt: 2, backgroundColor: 'green' }} disableElevation type='submit'>
           Register
         </Button>
       </form>

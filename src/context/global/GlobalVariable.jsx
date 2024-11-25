@@ -8,8 +8,10 @@ export function GlobalVariableProvider({ children }) {
   const [isPeoples, setIsPeoples] = useState(false);
   const [isChatBox, setIsChatBox] = useState(false);
   const [conversation, setConversation] = useState([])
-  const [userId, setUserId] = useState(null);
+  const [profile, setProfile] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedConversationId, setSelectedConversationId] = useState(null)
   const [chatBoxData, setChatBoxData] = useState({ username: "", status: "", avatar: "", id: "" });
 
 
@@ -25,8 +27,10 @@ export function GlobalVariableProvider({ children }) {
       setChatBoxData,
       conversation,
       setConversation,
-      userId, setUserId,
-      messages, setMessages
+      profile, setProfile,
+      messages, setMessages,
+      users, setUsers,
+      selectedConversationId, setSelectedConversationId
     }}>
       {children}
     </GlobalVar.Provider>

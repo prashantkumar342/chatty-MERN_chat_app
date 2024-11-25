@@ -12,11 +12,15 @@ import { apiContext } from "../../context/api/ApiProvider";
 function Dasboard() {
   const theme = useTheme();
   const { handleFetchUsers } = useContext(apiContext)
-  const { setIsDrawer, isChatBox } = useContext(GlobalVar);
+  const { setIsDrawer, isChatBox, setUsers, profile } = useContext(GlobalVar);
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
-    handleFetchUsers();
+    const fetchUsers = async () => {
+      const users = await handleFetchUsers();
+      setUsers(users);
+    }
+    fetchUsers();
   }, [])
 
   return (
@@ -33,23 +37,20 @@ function Dasboard() {
                     <MenuIcon />
                   </IconButton>
                   <Typography variant="h5" sx={{ marginLeft: "10px" }}>Chatty</Typography>
-                  <Avatar sx={{ marginLeft: "auto" }} src="/static/images/avatar/1.jpg" />
+                  <Avatar sx={{ marginLeft: "auto" }} src={profile.avatar} />
                 </div>
               )}
             </Toolbar>
           </AppBar>
-          <div className="flex flex-grow overflow-hidden">
-            <div className=" h-full overflow-y-auto border-r-2 border-white">
-              <Conversation />
-            </div>
-            <div className="flex-grow h-full overflow-y-auto ">
-              {
-                isChatBox ? <ChatBox /> :
-                  (<><div className="
-                    flex h-full w-full items-center justify-center
+          <div className="flex max-sm:flex-col flex-grow overflow-hidden border-green border">
+            <Conversation />
+            {
+              isChatBox ? <ChatBox /> :
+                (<><div className="
+                    flex h-full w-full items-center justify-center max-sm:hidden
                     "><Typography variant="body1">There is no chat selected </Typography></div></>)
-              }
-            </div>
+            }
+
           </div>
         </div>
       </div>

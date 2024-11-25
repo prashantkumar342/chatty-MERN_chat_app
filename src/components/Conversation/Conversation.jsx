@@ -15,9 +15,8 @@ import { GlobalVar } from "../../context/global/GlobalVariable";
 
 function ConversationList() {
   const { handleFetchConversation, handleFetchRecipient } = useContext(apiContext);
-  const { setIsChatBox, setIsPeoples, setChatBoxData, setMessages, userId } = useContext(GlobalVar);
+  const { setIsChatBox, setIsPeoples, setChatBoxData, setMessages, profile, selectedConversationId, setSelectedConversationId } = useContext(GlobalVar);
   const [conversations, setConversations] = useState([]);
-  const [selectedConversationId, setSelectedConversationId] = useState(null); // Track the selected conversation ID
   const socket = useSocket();
 
   useEffect(() => {
@@ -25,12 +24,14 @@ function ConversationList() {
       try {
         const conversationData = await handleFetchConversation();
         if (Array.isArray(conversationData)) {
-          // Sort conversations by timestamp (assuming each convo has a lastMessage field)
-          const sortedConversations = conversationData.sort(
-            (a, b) => new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp)
-          );
+          // Sort conversations by timestamp (ensure lastMessage and timestamp exist)
+          const sortedConversations = conversationData.sort((a, b) => {
+            const aTimestamp = a.lastMessage ? new Date(a.lastMessage.timestamp) : 0;
+            const bTimestamp = b.lastMessage ? new Date(b.lastMessage.timestamp) : 0;
+            return bTimestamp - aTimestamp;
+          });
           console.log("Sorted conversations:", sortedConversations);
-          setConversations(sortedConversations); // No need to spread here
+          setConversations(sortedConversations);
         } else {
           console.error("Fetched data is not an array:", conversationData);
         }
@@ -38,30 +39,34 @@ function ConversationList() {
         console.error("Error fetching conversations:", error);
       }
     };
-
     fetchConversation();
 
-    // Listen for conversation updates
     socket.on("conversationUpdate", data => {
-      console.log(data);
       setConversations(prevConversations => {
         const conversationExists = prevConversations.some(convo => convo._id === data._id);
 
         if (conversationExists) {
-          // Update existing conversation
           return prevConversations.map(convo => {
             if (convo._id === data._id) {
+              console.log(data);
               return { ...convo, ...data };
             }
             return convo;
-          }).sort((a, b) => new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp));
+          }).sort((a, b) => {
+            const aTimestamp = a.lastMessage ? new Date(a.lastMessage.timestamp) : 0;
+            const bTimestamp = b.lastMessage ? new Date(b.lastMessage.timestamp) : 0;
+            return bTimestamp - aTimestamp;
+          });
         } else {
-          // Add new conversation and sort
-          return [...prevConversations, data].sort((a, b) => new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp));
+          return [...prevConversations, data].sort((a, b) => {
+            const aTimestamp = a.lastMessage ? new Date(a.lastMessage.timestamp) : 0;
+            const bTimestamp = b.lastMessage ? new Date(b.lastMessage.timestamp) : 0;
+            return bTimestamp - aTimestamp;
+          });
         }
       });
 
-      // If the updated conversation is the currently selected one, update the messages state
+      
       if (data._id === selectedConversationId) {
         setMessages(data.messages);
       }
@@ -70,19 +75,21 @@ function ConversationList() {
     return () => {
       socket.off("conversationUpdate");
     };
-  }, [handleFetchConversation, selectedConversationId, socket]);
+  }, [handleFetchConversation, profile, selectedConversationId, socket]);
 
   const handleClick = async (convo) => {
+    if (!profile || !profile._id) return; // Ensure profile._id exists
+
     setIsChatBox(true);
     setIsPeoples(false);
-    const recipient = await handleFetchRecipient(convo.senderId._id === userId ? convo.receiverId._id : convo.senderId._id);
+    const recipient = await handleFetchRecipient(convo.senderId._id === profile._id ? convo.receiverId._id : convo.senderId._id);
     setMessages(convo.messages);
-    setChatBoxData({ username: recipient.username, status: recipient.status, id: recipient._id });
+    setChatBoxData({ username: recipient.username, status: recipient.status, id: recipient._id, avatar: recipient.avatar });
     setSelectedConversationId(convo._id); // Set the selected conversation ID
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full border border-red max-sm:w-screen overflow-y-auto border-r-2 border-white">
       <div className="p-2 bg-gray-100 h-16">
         <TextField
           variant="outlined"
@@ -93,7 +100,6 @@ function ConversationList() {
         />
       </div>
       <Divider />
-
       <div className="flex-grow overflow-auto">
         <List>
           {conversations.map((convo) => (
@@ -104,11 +110,11 @@ function ConversationList() {
                 onClick={() => handleClick(convo)}
               >
                 <ListItemAvatar>
-                  <Avatar src={convo.avatar || "https://via.placeholder.com/150"} />
+                  <Avatar src={convo.senderId._id === profile._id ? convo.receiverId.avatar : convo.senderId.avatar} sx={{ outline: "solid gray" }} />
                 </ListItemAvatar>
                 <ListItemText
-                  primary={convo.senderId._id === userId ? convo.receiverId.username : convo.senderId.username}
-                  secondary={convo.lastMessage.content}
+                  primary={convo.senderId._id === profile._id ? convo.receiverId.username : convo.senderId.username}
+                  secondary={convo.lastMessage ? convo.lastMessage.content : ''}
                 />
               </ListItem>
               <Divider />

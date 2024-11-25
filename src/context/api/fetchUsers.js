@@ -2,7 +2,6 @@ import { useCallback, useState } from "react";
 
 const useFetchUsers = () => {
   const [fetchLoading, setfetchLoading] = useState(false);
-  const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
 
   const fetchUsers = useCallback(async () => {
@@ -17,15 +16,15 @@ const useFetchUsers = () => {
         credentials: "include",
       });
       const status = response.status;
-      setUsers(await response.json());
-      return status;
+      const users = response.json();
+      return {status, users};
     } catch (error) {
       setError(error);
     } finally {
       setfetchLoading(false);
     }
   }, []);
-  return { fetchLoading, error, fetchUsers, users };
+  return { fetchLoading, error, fetchUsers};
 };
 
 export default useFetchUsers;

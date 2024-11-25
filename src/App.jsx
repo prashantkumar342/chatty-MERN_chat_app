@@ -10,17 +10,16 @@ import { GlobalVar } from "./context/global/GlobalVariable";
 function App() {
   const socket = useSocket();
   const { handleAuthenticateUser, isLoggedIn } = useContext(apiContext);
-  const { setUserId } = useContext(GlobalVar);
+  const { setProfile } = useContext(GlobalVar);
 
   useEffect(() => {
     const authenticate = async () => {
       const { status, data } = await handleAuthenticateUser();
       if (status === 200 && data) {
-        setUserId(data.userID);
+        setProfile(data.user);
       }
     };
     authenticate();
-
     if (socket) {
       socket.connect();
     }
@@ -33,6 +32,7 @@ function App() {
         <Route path="/setup" element={isLoggedIn ? <Navigate to='/dashboard' /> : <Form />} />
         <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to='/setup' />} />
       </Routes>
+
     </div>
   );
 }
