@@ -41,36 +41,38 @@ function ConversationList() {
     };
     fetchConversation();
 
-    socket.on("conversationUpdate", data => {
-      setConversations(prevConversations => {
-        const conversationExists = prevConversations.some(convo => convo._id === data._id);
+    if (socket) {
+      socket.on("conversationUpdate", data => {
+        setConversations(prevConversations => {
+          const conversationExists = prevConversations.some(convo => convo._id === data._id);
 
-        if (conversationExists) {
-          return prevConversations.map(convo => {
-            if (convo._id === data._id) {
-              console.log(data);
-              return { ...convo, ...data };
-            }
-            return convo;
-          }).sort((a, b) => {
-            const aTimestamp = a.lastMessage ? new Date(a.lastMessage.timestamp) : 0;
-            const bTimestamp = b.lastMessage ? new Date(b.lastMessage.timestamp) : 0;
-            return bTimestamp - aTimestamp;
-          });
-        } else {
-          return [...prevConversations, data].sort((a, b) => {
-            const aTimestamp = a.lastMessage ? new Date(a.lastMessage.timestamp) : 0;
-            const bTimestamp = b.lastMessage ? new Date(b.lastMessage.timestamp) : 0;
-            return bTimestamp - aTimestamp;
-          });
+          if (conversationExists) {
+            return prevConversations.map(convo => {
+              if (convo._id === data._id) {
+                console.log(data);
+                return { ...convo, ...data };
+              }
+              return convo;
+            }).sort((a, b) => {
+              const aTimestamp = a.lastMessage ? new Date(a.lastMessage.timestamp) : 0;
+              const bTimestamp = b.lastMessage ? new Date(b.lastMessage.timestamp) : 0;
+              return bTimestamp - aTimestamp;
+            });
+          } else {
+            return [...prevConversations, data].sort((a, b) => {
+              const aTimestamp = a.lastMessage ? new Date(a.lastMessage.timestamp) : 0;
+              const bTimestamp = b.lastMessage ? new Date(b.lastMessage.timestamp) : 0;
+              return bTimestamp - aTimestamp;
+            });
+          }
+        });
+
+
+        if (data._id === selectedConversationId) {
+          setMessages(data.messages);
         }
       });
-
-      
-      if (data._id === selectedConversationId) {
-        setMessages(data.messages);
-      }
-    });
+    }
 
     return () => {
       socket.off("conversationUpdate");
